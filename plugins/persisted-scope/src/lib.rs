@@ -142,9 +142,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     };
                 }
 
-                let arc_scope = Mutex::new(scope);
+                let mutex_scope = Mutex::new(scope);
                 fs_scope.listen(move |event| {
-                    let lock = arc_scope.lock();
+                    let lock = mutex_scope.lock();
                     let scope_path = match event {
                         FsScopeEvent::PathAllowed(allowed_path) => scope_path_from_patterns(
                             allowed_path,
