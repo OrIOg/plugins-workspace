@@ -5,12 +5,15 @@
 use serde::{Deserialize, Serialize};
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    FsScopeEvent, Manager, Runtime,
+    FsScopeEvent, GlobPattern, Manager, Runtime,
 };
 
 use std::{
+    collections::HashSet,
     fs::{create_dir_all, File},
     io::Write,
+    path::{PathBuf, MAIN_SEPARATOR},
+    sync::Mutex,
 };
 
 const SCOPE_STATE_FILENAME: &str = ".persisted-scope";
@@ -27,10 +30,24 @@ enum Error {
     Bincode(#[from] Box<bincode::ErrorKind>),
 }
 
+#[derive(Debug, Default, Deserialize, Serialize, Eq, PartialEq, Hash)]
+enum TargetType {
+    #[default]
+    File,
+    Directory,
+    RecursiveDirectory,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Eq, PartialEq, Hash)]
+struct ScopePath {
+    path: String,
+    target_type: TargetType,
+}
+
 #[derive(Debug, Default, Deserialize, Serialize)]
 struct Scope {
-    allowed_paths: Vec<String>,
-    forbidden_patterns: Vec<String>,
+    allowed_paths: HashSet<ScopePath>,
+    forbidden_patterns: HashSet<ScopePath>,
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -49,49 +66,110 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                 #[cfg(feature = "protocol-asset")]
                 let _ = asset_protocol_scope.forbid_file(&scope_state_path);
 
+                let mut scope: Scope = Scope::default();
                 if scope_state_path.exists() {
-                    let scope: Scope = tauri::api::file::read_binary(&scope_state_path)
+                    scope = tauri::api::file::read_binary(&scope_state_path)
                         .map_err(Error::from)
                         .and_then(|scope| bincode::deserialize(&scope).map_err(Into::into))
                         .unwrap_or_default();
-                    for allowed in scope.allowed_paths {
-                        // allows the path as is
-                        let _ = fs_scope.allow_file(&allowed);
-                        #[cfg(feature = "protocol-asset")]
-                        let _ = asset_protocol_scope.allow_file(allowed);
+
+                    println!("{:#?}", scope);
+
+                    for allowed in scope.allowed_paths.iter() {
+                        let path = &allowed.path;
+                        match allowed.target_type {
+                            TargetType::File => {
+                                let _ = fs_scope.allow_file(&path);
+                                #[cfg(feature = "protocol-asset")]
+                                let _ = asset_protocol_scope.allow_file(path);
+                            }
+                            TargetType::Directory => {
+                                let _ = fs_scope.allow_directory(path, false);
+                                #[cfg(feature = "protocol-asset")]
+                                let _ = asset_protocol_scope.allow_directory(path, false);
+                            }
+                            TargetType::RecursiveDirectory => {
+                                let _ = fs_scope.allow_directory(&path, true);
+                                #[cfg(feature = "protocol-asset")]
+                                let _ = asset_protocol_scope.allow_directory(path, true);
+                            }
+                        }
                     }
-                    for forbidden in scope.forbidden_patterns {
-                        // forbid the path as is
-                        let _ = fs_scope.forbid_file(&forbidden);
-                        #[cfg(feature = "protocol-asset")]
-                        let _ = asset_protocol_scope.forbid_file(forbidden);
+
+                    for allowed in scope.forbidden_patterns.iter() {
+                        let path = &allowed.path;
+                        match allowed.target_type {
+                            TargetType::File => {
+                                let _ = fs_scope.allow_file(&path);
+                                #[cfg(feature = "protocol-asset")]
+                                let _ = asset_protocol_scope.forbid_file(path);
+                            }
+                            TargetType::Directory => {
+                                let _ = fs_scope.forbid_directory(&path, false);
+                                #[cfg(feature = "protocol-asset")]
+                                let _ = asset_protocol_scope.forbid_directory(path, false);
+                            }
+                            TargetType::RecursiveDirectory => {
+                                let _ = fs_scope.forbid_directory(&path, true);
+                                #[cfg(feature = "protocol-asset")]
+                                let _ = asset_protocol_scope.forbid_directory(path, true);
+                            }
+                        }
                     }
                 }
 
+                fn scope_path_from_patterns(
+                    path: &PathBuf,
+                    patterns: &HashSet<GlobPattern>,
+                ) -> ScopePath {
+                    let path = path.to_string_lossy();
+                    let mut target_type = TargetType::File;
+                    for pattern in patterns {
+                        let escaped_path = GlobPattern::escape(&path);
+                        let pre_pattern = format!("{}{}{}", escaped_path, MAIN_SEPARATOR, '*');
+                        let str_pattern = pattern.to_string();
+                        if str_pattern.contains(&pre_pattern) {
+                            target_type = if str_pattern.ends_with("**") {
+                                TargetType::RecursiveDirectory
+                            } else {
+                                TargetType::Directory
+                            };
+                        }
+                    }
+                    return ScopePath {
+                        path: path.to_string(),
+                        target_type,
+                    };
+                }
+
+                let arc_scope = Mutex::new(scope);
                 fs_scope.listen(move |event| {
-                    let fs_scope = app.fs_scope();
-                    if let FsScopeEvent::PathAllowed(_) = event {
-                        let scope = Scope {
-                            allowed_paths: fs_scope
-                                .allowed_patterns()
-                                .into_iter()
-                                .map(|p| p.to_string())
-                                .collect(),
-                            forbidden_patterns: fs_scope
-                                .forbidden_patterns()
-                                .into_iter()
-                                .map(|p| p.to_string())
-                                .collect(),
-                        };
+                    let lock = arc_scope.lock();
+                    let scope_path = match event {
+                        FsScopeEvent::PathAllowed(allowed_path) => scope_path_from_patterns(
+                            allowed_path,
+                            &app.fs_scope().allowed_patterns(),
+                        ),
+                        FsScopeEvent::PathForbidden(forbidden_path) => scope_path_from_patterns(
+                            forbidden_path,
+                            &app.fs_scope().forbidden_patterns(),
+                        ),
+                    };
+
+                    if let Ok(mut scope) = lock {
+                        scope.allowed_paths.insert(scope_path);
+
                         let scope_state_path = scope_state_path.clone();
 
                         let _ = create_dir_all(&app_dir)
                             .and_then(|_| File::create(scope_state_path))
                             .map_err(Error::Io)
                             .and_then(|mut f| {
-                                f.write_all(&bincode::serialize(&scope).map_err(Error::from)?)
+                                f.write_all(&bincode::serialize(&(*scope)).map_err(Error::from)?)
                                     .map_err(Into::into)
                             });
+                    } else {
+                        println!("try_lock failed");
                     }
                 });
             }
