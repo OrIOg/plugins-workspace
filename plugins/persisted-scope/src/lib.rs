@@ -47,7 +47,7 @@ struct ScopePath {
 #[derive(Debug, Default, Deserialize, Serialize)]
 struct Scope {
     allowed_paths: HashSet<ScopePath>,
-    forbidden_patterns: HashSet<ScopePath>,
+    forbidden_paths: HashSet<ScopePath>,
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -96,7 +96,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                         }
                     }
 
-                    for allowed in scope.forbidden_patterns.iter() {
+                    for allowed in scope.forbidden_paths.iter() {
                         let path = &allowed.path;
                         match allowed.target_type {
                             TargetType::File => {
@@ -145,19 +145,23 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                 let mutex_scope = Mutex::new(scope);
                 fs_scope.listen(move |event| {
                     let lock = mutex_scope.lock();
-                    let scope_path = match event {
-                        FsScopeEvent::PathAllowed(allowed_path) => scope_path_from_patterns(
-                            allowed_path,
-                            &app.fs_scope().allowed_patterns(),
-                        ),
-                        FsScopeEvent::PathForbidden(forbidden_path) => scope_path_from_patterns(
-                            forbidden_path,
-                            &app.fs_scope().forbidden_patterns(),
-                        ),
-                    };
-
                     if let Ok(mut scope) = lock {
-                        scope.allowed_paths.insert(scope_path);
+                        match event {
+                            FsScopeEvent::PathAllowed(allowed_path) => {
+                                let scope_path = scope_path_from_patterns(
+                                    allowed_path,
+                                    &app.fs_scope().allowed_patterns(),
+                                );
+                                scope.allowed_paths.insert(scope_path);
+                            }
+                            FsScopeEvent::PathForbidden(forbidden_path) => {
+                                let scope_path = scope_path_from_patterns(
+                                    forbidden_path,
+                                    &app.fs_scope().forbidden_patterns(),
+                                );
+                                scope.forbidden_paths.insert(scope_path);
+                            }
+                        };
 
                         let scope_state_path = scope_state_path.clone();
 
