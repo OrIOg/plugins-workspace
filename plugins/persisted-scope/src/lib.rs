@@ -73,8 +73,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                         .and_then(|scope| bincode::deserialize(&scope).map_err(Into::into))
                         .unwrap_or_default();
 
-                    println!("{:#?}", scope);
-
                     for allowed in scope.allowed_paths.iter() {
                         let path = &allowed.path;
                         match allowed.target_type {
