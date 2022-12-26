@@ -185,6 +185,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
+name = "base64"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ea22880d78093b0cbe17c89f64a7d457941e65759157ec6cb31a31d652b05e5"
+
+[[package]]
 name = "base64ct"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1976,7 +1982,19 @@ checksum = "eb3fa5a61630976fc4c353c70297f2e93f1930e3ccee574d59d618ccbd5154ce"
 dependencies = [
  "serde",
  "serde_json",
- "treediff",
+ "treediff 3.0.2",
+]
+
+[[package]]
+name = "json-patch"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e712e62827c382a77b87f590532febb1f8b2fdbc3eefa1ee37fe7281687075ef"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+ "treediff 4.0.2",
 ]
 
 [[package]]
@@ -2143,7 +2161,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_repr",
- "tauri",
+ "tauri 1.2.2",
  "time 0.3.17",
 ]
 
@@ -4061,10 +4079,54 @@ dependencies = [
  "serialize-to-javascript",
  "state",
  "tar",
- "tauri-macros",
- "tauri-runtime",
- "tauri-runtime-wry",
- "tauri-utils",
+ "tauri-macros 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tauri-runtime 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tauri-runtime-wry 0.12.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tauri-utils 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "url",
+ "uuid 1.2.2",
+ "webkit2gtk",
+ "webview2-com",
+ "windows",
+]
+
+[[package]]
+name = "tauri"
+version = "1.2.3"
+source = "git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata#911587692cd22071c8f8fc8361d90a17a71806ef"
+dependencies = [
+ "anyhow",
+ "cocoa",
+ "dirs-next",
+ "embed_plist",
+ "encoding_rs",
+ "flate2",
+ "futures-util",
+ "glib",
+ "glob",
+ "gtk",
+ "heck 0.4.0",
+ "http",
+ "ignore",
+ "objc",
+ "once_cell",
+ "percent-encoding",
+ "rand 0.8.5",
+ "raw-window-handle",
+ "semver 1.0.14",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "serialize-to-javascript",
+ "state",
+ "tar",
+ "tauri-macros 1.2.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
+ "tauri-runtime 0.12.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
+ "tauri-runtime-wry 0.12.2 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
+ "tauri-utils 1.2.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
  "tempfile",
  "thiserror",
  "tokio",
@@ -4084,7 +4146,7 @@ dependencies = [
  "base64 0.13.1",
  "brotli",
  "ico",
- "json-patch",
+ "json-patch 0.2.7",
  "plist",
  "png",
  "proc-macro2",
@@ -4093,7 +4155,31 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.6",
- "tauri-utils",
+ "tauri-utils 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror",
+ "time 0.3.17",
+ "uuid 1.2.2",
+ "walkdir",
+]
+
+[[package]]
+name = "tauri-codegen"
+version = "1.2.1"
+source = "git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata#911587692cd22071c8f8fc8361d90a17a71806ef"
+dependencies = [
+ "base64 0.20.0",
+ "brotli",
+ "ico",
+ "json-patch 0.3.0",
+ "plist",
+ "png",
+ "proc-macro2",
+ "quote",
+ "semver 1.0.14",
+ "serde",
+ "serde_json",
+ "sha2 0.10.6",
+ "tauri-utils 1.2.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
  "thiserror",
  "time 0.3.17",
  "uuid 1.2.2",
@@ -4110,8 +4196,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
- "tauri-codegen",
- "tauri-utils",
+ "tauri-codegen 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tauri-utils 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tauri-macros"
+version = "1.2.1"
+source = "git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata#911587692cd22071c8f8fc8361d90a17a71806ef"
+dependencies = [
+ "heck 0.4.0",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "tauri-codegen 1.2.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
+ "tauri-utils 1.2.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
 ]
 
 [[package]]
@@ -4128,7 +4227,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.6",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
  "u2f",
 ]
@@ -4141,7 +4240,7 @@ dependencies = [
  "log 0.4.17",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
 ]
 
@@ -4152,7 +4251,7 @@ dependencies = [
  "log 0.4.17",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
 ]
 
@@ -4164,7 +4263,7 @@ dependencies = [
  "notify",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
 ]
 
@@ -4176,7 +4275,7 @@ dependencies = [
  "log 0.4.17",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
  "tiny_http",
 ]
@@ -4189,7 +4288,7 @@ dependencies = [
  "log 0.4.17",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.3",
  "thiserror",
 ]
 
@@ -4201,7 +4300,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_repr",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
 ]
 
@@ -4214,7 +4313,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sqlx",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
  "tokio",
 ]
@@ -4226,7 +4325,7 @@ dependencies = [
  "log 0.4.17",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
 ]
 
@@ -4242,7 +4341,7 @@ dependencies = [
  "rusty-fork",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
  "zeroize",
 ]
@@ -4257,7 +4356,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
  "tokio",
  "tokio-util",
@@ -4272,7 +4371,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
  "tokio",
  "tokio-tungstenite",
@@ -4286,7 +4385,7 @@ dependencies = [
  "log 0.4.17",
  "serde",
  "serde_json",
- "tauri",
+ "tauri 1.2.2",
  "thiserror",
 ]
 
@@ -4303,7 +4402,26 @@ dependencies = [
  "raw-window-handle",
  "serde",
  "serde_json",
- "tauri-utils",
+ "tauri-utils 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror",
+ "uuid 1.2.2",
+ "webview2-com",
+ "windows",
+]
+
+[[package]]
+name = "tauri-runtime"
+version = "0.12.1"
+source = "git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata#911587692cd22071c8f8fc8361d90a17a71806ef"
+dependencies = [
+ "gtk",
+ "http",
+ "http-range",
+ "rand 0.8.5",
+ "raw-window-handle",
+ "serde",
+ "serde_json",
+ "tauri-utils 1.2.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
  "thiserror",
  "uuid 1.2.2",
  "webview2-com",
@@ -4321,8 +4439,27 @@ dependencies = [
  "percent-encoding",
  "rand 0.8.5",
  "raw-window-handle",
- "tauri-runtime",
- "tauri-utils",
+ "tauri-runtime 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tauri-utils 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 1.2.2",
+ "webkit2gtk",
+ "webview2-com",
+ "windows",
+ "wry",
+]
+
+[[package]]
+name = "tauri-runtime-wry"
+version = "0.12.2"
+source = "git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata#911587692cd22071c8f8fc8361d90a17a71806ef"
+dependencies = [
+ "cocoa",
+ "gtk",
+ "percent-encoding",
+ "rand 0.8.5",
+ "raw-window-handle",
+ "tauri-runtime 0.12.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
+ "tauri-utils 1.2.1 (git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata)",
  "uuid 1.2.2",
  "webkit2gtk",
  "webview2-com",
@@ -4342,7 +4479,34 @@ dependencies = [
  "heck 0.4.0",
  "html5ever",
  "infer",
- "json-patch",
+ "json-patch 0.2.7",
+ "kuchiki",
+ "memchr",
+ "phf 0.10.1",
+ "proc-macro2",
+ "quote",
+ "semver 1.0.14",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "thiserror",
+ "url",
+ "walkdir",
+ "windows",
+]
+
+[[package]]
+name = "tauri-utils"
+version = "1.2.1"
+source = "git+https://github.com/tauri-apps/tauri?branch=feat/fs-scope-metadata#911587692cd22071c8f8fc8361d90a17a71806ef"
+dependencies = [
+ "brotli",
+ "ctor",
+ "glob",
+ "heck 0.4.0",
+ "html5ever",
+ "infer",
+ "json-patch 0.2.7",
  "kuchiki",
  "memchr",
  "phf 0.10.1",
@@ -4652,6 +4816,15 @@ name = "treediff"
 version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "761e8d5ad7ce14bb82b7e61ccc0ca961005a275a060b9644a2431aa11553c2ff"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
+name = "treediff"
+version = "4.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52984d277bdf2a751072b5df30ec0377febdb02f7696d64c2d7d54630bac4303"
 dependencies = [
  "serde_json",
 ]

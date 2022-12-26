@@ -10,7 +10,7 @@ license.workspace = true
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
-tauri.workspace = true
+tauri = { git = "https://github.com/tauri-apps/tauri", branch = "feat/fs-scope-metadata" }
 log.workspace = true
 thiserror.workspace = true
 bincode = "1"

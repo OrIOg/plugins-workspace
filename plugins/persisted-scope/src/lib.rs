@@ -5,14 +5,14 @@
 use serde::{Deserialize, Serialize};
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    FsScopeEvent, GlobPattern, Manager, Runtime,
+    FsScopeEvent, Manager, Runtime,
 };
 
 use std::{
     collections::HashSet,
     fs::{create_dir_all, File},
     io::Write,
-    path::{PathBuf, MAIN_SEPARATOR},
+    path::PathBuf,
     sync::Mutex,
 };
 
@@ -116,60 +116,56 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                     }
                 }
 
-                fn scope_path_from_patterns(
-                    path: &PathBuf,
-                    patterns: &HashSet<GlobPattern>,
-                ) -> ScopePath {
-                    let path = path.to_string_lossy();
-                    let mut target_type = TargetType::File;
-                    for pattern in patterns {
-                        let escaped_path = GlobPattern::escape(&path);
-                        let pre_pattern = format!("{}{}{}", escaped_path, MAIN_SEPARATOR, '*');
-                        let str_pattern = pattern.to_string();
-                        if str_pattern.contains(&pre_pattern) {
-                            target_type = if str_pattern.ends_with("**") {
-                                TargetType::RecursiveDirectory
-                            } else {
-                                TargetType::Directory
+                let fs_scope_closure = fs_scope.clone();
+                let add_to_list = move |path: &PathBuf, list: &mut HashSet<ScopePath>| -> bool {
+                    let data = fs_scope_closure.allowed_path_metadata(path.as_path());
+                    match data {
+                        Some(metadata) => {
+                            let scope_path = ScopePath {
+                                path: path.to_string_lossy().to_string(),
+                                target_type: if metadata.is_dir() {
+                                    if metadata.recursive() {
+                                        TargetType::RecursiveDirectory
+                                    } else {
+                                        TargetType::Directory
+                                    }
+                                } else {
+                                    TargetType::File
+                                },
                             };
+                            list.insert(scope_path);
+                            true
                         }
+                        None => false,
                     }
-                    return ScopePath {
-                        path: path.to_string(),
-                        target_type,
-                    };
-                }
+                };
 
                 let mutex_scope = Mutex::new(scope);
                 fs_scope.listen(move |event| {
                     let lock = mutex_scope.lock();
                     if let Ok(mut scope) = lock {
-                        match event {
+                        let is_ok = match event {
                             FsScopeEvent::PathAllowed(allowed_path) => {
-                                let scope_path = scope_path_from_patterns(
-                                    allowed_path,
-                                    &app.fs_scope().allowed_patterns(),
-                                );
-                                scope.allowed_paths.insert(scope_path);
+                                add_to_list(allowed_path, &mut scope.allowed_paths)
                             }
                             FsScopeEvent::PathForbidden(forbidden_path) => {
-                                let scope_path = scope_path_from_patterns(
-                                    forbidden_path,
-                                    &app.fs_scope().forbidden_patterns(),
-                                );
-                                scope.forbidden_paths.insert(scope_path);
+                                add_to_list(forbidden_path, &mut scope.forbidden_paths)
                             }
                         };
 
-                        let scope_state_path = scope_state_path.clone();
+                        if is_ok {
+                            let scope_state_path = scope_state_path.clone();
 
-                        let _ = create_dir_all(&app_dir)
-                            .and_then(|_| File::create(scope_state_path))
-                            .map_err(Error::Io)
-                            .and_then(|mut f| {
-                                f.write_all(&bincode::serialize(&(*scope)).map_err(Error::from)?)
+                            let _ = create_dir_all(&app_dir)
+                                .and_then(|_| File::create(scope_state_path))
+                                .map_err(Error::Io)
+                                .and_then(|mut f| {
+                                    f.write_all(
+                                        &bincode::serialize(&(*scope)).map_err(Error::from)?,
+                                    )
                                     .map_err(Into::into)
-                            });
+                                });
+                        }
                     } else {
                         println!("try_lock failed");
                     }
