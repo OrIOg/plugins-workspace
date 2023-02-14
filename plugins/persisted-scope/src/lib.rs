@@ -73,11 +73,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                         .and_then(|scope| bincode::deserialize(&scope).map_err(Into::into))
                         .unwrap_or_default();
 
-                    for allowed in scope.allowed_paths.iter() {
+                    for allowed in &scope.allowed_paths {
                         let path = &allowed.path;
                         match allowed.target_type {
                             TargetType::File => {
-                                let _ = fs_scope.allow_file(&path);
+                                let _ = fs_scope.allow_file(path);
                                 #[cfg(feature = "protocol-asset")]
                                 let _ = asset_protocol_scope.allow_file(path);
                             }
@@ -87,28 +87,28 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
                                 let _ = asset_protocol_scope.allow_directory(path, false);
                             }
                             TargetType::RecursiveDirectory => {
-                                let _ = fs_scope.allow_directory(&path, true);
+                                let _ = fs_scope.allow_directory(path, true);
                                 #[cfg(feature = "protocol-asset")]
                                 let _ = asset_protocol_scope.allow_directory(path, true);
                             }
                         }
                     }
 
-                    for allowed in scope.forbidden_paths.iter() {
-                        let path = &allowed.path;
-                        match allowed.target_type {
+                    for forbidden in &scope.forbidden_paths {
+                        let path = &forbidden.path;
+                        match forbidden.target_type {
                             TargetType::File => {
-                                let _ = fs_scope.allow_file(&path);
+                                let _ = fs_scope.allow_file(path);
                                 #[cfg(feature = "protocol-asset")]
                                 let _ = asset_protocol_scope.forbid_file(path);
                             }
                             TargetType::Directory => {
-                                let _ = fs_scope.forbid_directory(&path, false);
+                                let _ = fs_scope.forbid_directory(path, false);
                                 #[cfg(feature = "protocol-asset")]
                                 let _ = asset_protocol_scope.forbid_directory(path, false);
                             }
                             TargetType::RecursiveDirectory => {
-                                let _ = fs_scope.forbid_directory(&path, true);
+                                let _ = fs_scope.forbid_directory(path, true);
                                 #[cfg(feature = "protocol-asset")]
                                 let _ = asset_protocol_scope.forbid_directory(path, true);
                             }
