@@ -142,14 +142,14 @@ fn log(
     logger().log(&builder.args(format_args!("{message}")).build());
 }
 
-pub struct LoggerBuilder {
+pub struct Builder {
     dispatch: fern::Dispatch,
     rotation_strategy: RotationStrategy,
     max_file_size: u128,
     targets: Vec<LogTarget>,
 }
 
-impl Default for LoggerBuilder {
+impl Default for Builder {
     fn default() -> Self {
         let format =
             time::format_description::parse("[[[year]-[month]-[day]][[[hour]:[minute]:[second]]")
@@ -172,7 +172,7 @@ impl Default for LoggerBuilder {
     }
 }
 
-impl LoggerBuilder {
+impl Builder {
     pub fn new() -> Self {
         Default::default()
     }
@@ -308,7 +308,7 @@ fn get_log_file_path(
     rotation_strategy: &RotationStrategy,
     max_file_size: u128,
 ) -> plugin::Result<PathBuf> {
-    let path = dir.as_ref().join(format!("{}.log", app_name));
+    let path = dir.as_ref().join(format!("{app_name}.log"));
 
     if path.exists() {
         let log_size = File::open(&path)?.metadata()?.len() as u128;

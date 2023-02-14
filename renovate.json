@@ -1,0 +1,12 @@
+{
+  "extends": ["config:base"],
+  "enabledManagers": ["cargo", "npm"],
+  "packageRules": [
+    {
+      "description": "Disable node/pnpm version updates",
+      "matchPackageNames": ["node", "pnpm"],
+      "matchDepTypes": ["engines", "packageManager"],
+      "enabled": false
+    }
+  ]
+}
